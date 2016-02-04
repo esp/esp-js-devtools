@@ -42,6 +42,10 @@ module.exports = {
             {
                 test: /\.(otf|eot|png|svg|ttf|woff|woff2)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
                 loader: 'file-loader?name=[path][name].[ext]?[hash]&mimetype=application/font-woff'
+            },
+            {
+                test: /\.html?$/,
+                loader: 'html-loader'
             }
         ]
     }

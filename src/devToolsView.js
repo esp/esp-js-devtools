@@ -9,6 +9,7 @@ import moment from 'moment';
 import vis from 'vis';
 import 'vis/dist/vis.css';
 import UpdateType from './updateType';
+import template from './devToolsView.template.html';
 
 export default class DevToolsView extends esp.model.DisposableBase {
 
@@ -18,6 +19,7 @@ export default class DevToolsView extends esp.model.DisposableBase {
         this._timelineGroups = new vis.DataSet();
         this._timelineData = new vis.DataSet();
         this._timeline = null;
+        this._autoscrollCheckbox = null;
     }
 
     start() {
@@ -41,27 +43,41 @@ export default class DevToolsView extends esp.model.DisposableBase {
                             start: model.lastEvent.publishedTime,
                         });
                     }
-                    if(this._timeline) {
-                        this._setTimelineWindow();
-                        this._timeline.setOptions({max: moment().add(10, 'm')})
+
+                    if (this._timeline && this._autoscrollCheckbox) {
+                        this._timeline.setOptions({max: moment().add(2, 'm')})
+                        if (model.shouldAutoScroll) {
+                            this._setTimelineWindow();
+                        }
+                        if(this._autoscrollCheckbox.prop('checked') !== model.shouldAutoScroll) {
+                            this._autoscrollCheckbox.prop('checked', model.shouldAutoScroll);
+                        }
                     }
                 })
         );
     }
 
     _createDevToolsElements() {
+        let _this = this;
         $(() => {
-            var container = $("<div id='esp-js-devtool-container'><div id='handle'>x</div></div>");
-            var inner = $("<div class='inner'></div>");
+            let container = $(template);
+            this._autoscrollCheckbox = container.find('#autoscrollCheckbox');
+            this._autoscrollCheckbox.change(function () { // note use of function so 'this' is the checkbox
+                if (this.checked) {
+                    _this._router.publishEvent('autoscrollToggled', {shouldAutoScroll: this.checked});
+                }
+            });
+
+            let inner = $("<div class='inner'></div>");
             container.append(inner);
             container.draggable({
-                cursor: "move",
-                handle: "#handle"
+                cursor: 'move',
+                handle: '#header'
             });
-            var options = {
+            let options = {
                 groupOrder: 'content',
                 showCurrentTime: true,
-                selectable:true,
+                selectable: true,
                 stack: false,
                 min: moment().subtract(1, 'm'),
                 max: moment().add(10, 'm'),
@@ -79,25 +95,27 @@ export default class DevToolsView extends esp.model.DisposableBase {
             $('body').append(container);
         });
     }
+
     _setTimelineWindow() {
         this._timeline.setWindow(moment().subtract(1, 'm'), moment().add(20, 's'))
     }
+
     _wireUpTimelineEvents(timeline) {
-        timeline.on('select', properties =>{
+        timeline.on('select', properties => {
             let pointId = properties.items[0];
             this._router.publishEvent(
                 'eventSelected', {
-                    eventNumber:pointId
+                    eventNumber: pointId
                 }
             );
         });
-        timeline.on('select', properties =>{
-            let pointId = properties.items[0];
-            this._router.publishEvent(
-                'eventSelected', {
-                    eventNumber:pointId
-                }
-            );
-        });
+        timeline.on('click', properties => { this._disableAutoScroll() });
+        timeline.on('doubleClick', properties => { this._disableAutoScroll() });
+        timeline.on('timechanged', properties => { this._disableAutoScroll() });
+        timeline.on('groupDragged', properties => { this._disableAutoScroll() });
+    }
+
+    _disableAutoScroll() {
+        this._router.publishEvent('disableAutoScroll', {});
     }
 }
