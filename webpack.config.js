@@ -15,7 +15,7 @@ module.exports = {
         filename: 'esp-js-devtools.js'
     },
     debug: true,
-    devtool: 'source-map',
+    devtool: 'inline-source-map',
     module: {
         loaders: [
             {
@@ -31,7 +31,8 @@ module.exports = {
                 ],
                 test: /\.jsx?$/,
                 query: {
-                    presets: ['es2015', 'stage-0', 'react'],
+                    presets: ['es2015', 'stage-0'],
+                    plugins: ['transform-runtime', 'transform-decorators-legacy']
                 }
             },
             {
