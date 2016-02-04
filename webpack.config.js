@@ -8,13 +8,20 @@ module.exports = {
         './src/index'
     ],
     output: {
-        path: './dist',
+        libraryTarget: 'umd',
+        sourcePrefix: '    ',
+        library: 'esp',
+        path: './dist/',
         filename: 'esp-js-devtools.js'
     },
     debug: true,
     devtool: 'source-map',
     module: {
         loaders: [
+            {
+                test: /vendor\/.+\.(jsx|js)$/,
+                loader: 'imports?jQuery=jquery,$=jquery,this=>window'
+            },
             {
                 loader: "babel-loader",
 
@@ -27,17 +34,14 @@ module.exports = {
                     presets: ['es2015', 'stage-0', 'react'],
                 }
             },
-            // LESS
             {
-                test: /\.less$/,
-                loader: 'style!css!less'
+                test: /\.(css|less)$/,
+                loader: 'style-loader!css-loader!less-loader'
             },
+            {
+                test: /\.(otf|eot|png|svg|ttf|woff|woff2)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                loader: 'file-loader?name=[path][name].[ext]?[hash]&mimetype=application/font-woff'
+            }
         ]
-    },
-    devServer: {
-        contentBase: './src',
-        hot: true,
-        inline: true,
-        port: 9898
     }
 };
