@@ -68,4 +68,8 @@ export default class DebugToolsModel extends esp.model.DisposableBase {
         this._registeredModels[modelId] = registeredModel;
         return registeredModel;
     }
+    @esp.observeEvent('eventSelected')
+    _onEventSelected(event, context, model) {
+
+    }
 }

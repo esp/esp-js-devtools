@@ -31,47 +31,19 @@ export default class DevToolsView extends esp.model.DisposableBase {
                             var registeredModel = model.registeredModels[i];
                             this._timelineGroups.update({
                                 id: registeredModel.modelId,
-                                content: `Model id [${registeredModel.modelId}]`
+                                content: `Model id <span style="color:#97B0F8;">[${registeredModel.modelId}]</span>`
                             });
                         }
                     } else if (model.updateType === UpdateType.eventsChanged) {
                         this._timelineData.add({
                             id: model.lastEvent.eventNumber,
                             group: model.lastEvent.modelId,
-                            //content: 'item ' + i +
-                            //' <span style="color:#97B0F8;">(' + names[group] + ')</span>',
+                            title: model.lastEvent.eventType,
                             start: model.lastEvent.publishedTime,
-                           // type: 'box'
                         });
                     }
                 })
         );
-        //var now = moment(); //.minutes(0).seconds(0).milliseconds(0);
-        //var groupCount = 3;
-        //var itemCount = 20;
-        //
-        //// create a data set with groups
-        //var names = ['John', 'Alston', 'Lee', 'Grant'];
-        //var groups = new vis.DataSet();
-        //for (var g = 0; g < groupCount; g++) {
-        //    groups.add({id: g, content: names[g]});
-        //}
-
-        // create a dataset with items
-        //var items = new vis.DataSet();
-        //for (var i = 0; i < itemCount; i++) {
-        //    var start = moment(now).add(Math.random() * 200, 'hours');
-        //    var group = Math.floor(Math.random() * groupCount);
-        //    items.add({
-        //        id: i,
-        //        group: group,
-        //        content: 'item ' + i +
-        //        ' <span style="color:#97B0F8;">(' + names[group] + ')</span>',
-        //        start: start,
-        //        type: 'box'
-        //    });
-        //}
-
     }
 
     _createDevToolsElements() {
@@ -85,14 +57,39 @@ export default class DevToolsView extends esp.model.DisposableBase {
             });
             var options = {
                 groupOrder: 'content',
-                showCurrentTime: true
+                showCurrentTime: true,
+                selectable:true,
+                stack: false,
+                min: new Date(),                // lower limit of visible range
+                //max: new Date(2013, 0, 1),                // upper limit of visible range
+                zoomMin: 1000 * 60 * 60 * 24,             // one day in milliseconds
+                zoomMax: 1000 * 60 * 60 * 24     // one day in milliseconds
             };
             var timeline = new vis.Timeline(inner[0]);
             timeline.setOptions(options);
             timeline.setGroups(this._timelineGroups);
             timeline.setItems(this._timelineData);
+            this._wireUpTimelineEvents(timeline);
             $('body').append(container);
             this._uiCreated = true;
+        });
+    }
+    _wireUpTimelineEvents(timeline) {
+        timeline.on('select', properties =>{
+            let pointId = properties.items[0];
+            this._router.publishEvent(
+                'eventSelected', {
+                    eventNumber:pointId
+                }
+            );
+        });
+        timeline.on('select', properties =>{
+            let pointId = properties.items[0];
+            this._router.publishEvent(
+                'eventSelected', {
+                    eventNumber:pointId
+                }
+            );
         });
     }
 }
