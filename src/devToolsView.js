@@ -17,14 +17,13 @@ export default class DevToolsView extends esp.model.DisposableBase {
         this._router = router;
         this._timelineGroups = new vis.DataSet();
         this._timelineData = new vis.DataSet();
-        this._uiCreated = false;
+        this._timeline = null;
     }
 
     start() {
         this._createDevToolsElements();
         this.addDisposable(
             this._router.getModelObservable()
-                // .where(model => this._uiCreated)
                 .observe(model => {
                     if (model.updateType === UpdateType.modelsChanged) {
                         for (var i = 0; i < model.registeredModels.length; i++) {
@@ -41,6 +40,10 @@ export default class DevToolsView extends esp.model.DisposableBase {
                             title: model.lastEvent.eventType,
                             start: model.lastEvent.publishedTime,
                         });
+                    }
+                    if(this._timeline) {
+                        this._setTimelineWindow();
+                        this._timeline.setOptions({max: moment().add(10, 'm')})
                     }
                 })
         );
@@ -60,19 +63,24 @@ export default class DevToolsView extends esp.model.DisposableBase {
                 showCurrentTime: true,
                 selectable:true,
                 stack: false,
-                min: new Date(),                // lower limit of visible range
-                //max: new Date(2013, 0, 1),                // upper limit of visible range
-                zoomMin: 1000 * 60 * 60 * 24,             // one day in milliseconds
-                zoomMax: 1000 * 60 * 60 * 24     // one day in milliseconds
+                min: moment().subtract(1, 'm'),
+                max: moment().add(10, 'm'),
+                //min: new Date(),                // lower limit of visible range
+                ////max: new Date(2013, 0, 1),                // upper limit of visible range
+                // zoomMin: 1000 * 60 * 60 * 24,             // one day in milliseconds
+                //zoomMax: 1000 * 60 * 60 * 24     // one day in milliseconds
             };
-            var timeline = new vis.Timeline(inner[0]);
-            timeline.setOptions(options);
-            timeline.setGroups(this._timelineGroups);
-            timeline.setItems(this._timelineData);
-            this._wireUpTimelineEvents(timeline);
+            this._timeline = new vis.Timeline(inner[0]);
+            this._timeline.setOptions(options);
+            this._timeline.setGroups(this._timelineGroups);
+            this._timeline.setItems(this._timelineData);
+            this._wireUpTimelineEvents(this._timeline);
+            this._setTimelineWindow();
             $('body').append(container);
-            this._uiCreated = true;
         });
+    }
+    _setTimelineWindow() {
+        this._timeline.setWindow(moment().subtract(1, 'm'), moment().add(20, 's'))
     }
     _wireUpTimelineEvents(timeline) {
         timeline.on('select', properties =>{

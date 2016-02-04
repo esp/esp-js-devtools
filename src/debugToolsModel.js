@@ -13,6 +13,13 @@ export default class DebugToolsModel extends esp.model.DisposableBase {
         this._lastEvent = null;
         this._updateType = UpdateType.none;
         this._eventCounter = 0;
+        this._timerSubscription = null;
+        this.addDisposable(() => {
+            if(this._timerSubscription != null) {
+                clearInterval(this._timerSubscription);
+            }
+        });
+        this._now = moment();
     }
     static get modelId() {
         return 'esp-debugTools-modelId';
@@ -26,6 +33,9 @@ export default class DebugToolsModel extends esp.model.DisposableBase {
     get lastEvent() {
         return this._lastEvent;
     }
+    get now() {
+        return this._now;
+    }
     observeEvents() {
         this.addDisposable(this._router.observeEventsOn(this));
     }
@@ -35,7 +45,7 @@ export default class DebugToolsModel extends esp.model.DisposableBase {
     }
     @esp.observeEvent('initEvent')
     _onInitEvent(event, context, model) {
-
+        this._startTimer();
     }
     @esp.observeEvent('modelAdded')
     _onModelAdded(event, context, model) {
@@ -57,7 +67,6 @@ export default class DebugToolsModel extends esp.model.DisposableBase {
         this._eventCounter++;
         this._lastEvent = registeredModel.eventPublished(this._eventCounter, event.modelId, event.eventType);
     }
-
     _addModel(modelId) {
         this._updateType = UpdateType.modelsChanged;
         let registeredModel = this._registeredModels[modelId];
@@ -71,5 +80,14 @@ export default class DebugToolsModel extends esp.model.DisposableBase {
     @esp.observeEvent('eventSelected')
     _onEventSelected(event, context, model) {
 
+    }
+    _startTimer() {
+        // start a timer so we can keep moving the chart forward
+        this._timerSubscription = setInterval(() => {
+            this._router.runAction(() => {
+                this._updateType = UpdateType.timeChanged;
+                this._now = moment();
+            });
+        }, 1000);
     }
 }
