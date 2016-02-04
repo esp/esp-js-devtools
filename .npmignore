@@ -5,3 +5,4 @@ docs
 *.log
 .travis.yml
 NOTICE
+dev-server/
