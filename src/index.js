@@ -1,3 +1,9 @@
-import DevToolsView from './devToolsView.jsx';
+//import 'script!jquery';
+//import 'script!jquery-ui/draggable';
 
-export default { DevToolsView };
+import { default as registerDevTools } from './registerDevTools';
+
+export { registerDevTools };
+export default {
+    registerDevTools
+}
