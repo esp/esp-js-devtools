@@ -20,6 +20,7 @@ export default class DevToolsView extends esp.model.DisposableBase {
         this._timelineData = new vis.DataSet();
         this._timeline = null;
         this._autoscrollCheckbox = null;
+        this._eventDetailsDescriptionP = null;
     }
 
     start() {
@@ -52,6 +53,10 @@ export default class DevToolsView extends esp.model.DisposableBase {
                         if(this._autoscrollCheckbox.prop('checked') !== model.shouldAutoScroll) {
                             this._autoscrollCheckbox.prop('checked', model.shouldAutoScroll);
                         }
+
+                        if(this._eventDetailsDescriptionP && model.selectedEvent) {
+                            this._eventDetailsDescriptionP.html(JSON.stringify(model.selectedEvent));
+                        }
                     }
                 })
         );
@@ -63,10 +68,9 @@ export default class DevToolsView extends esp.model.DisposableBase {
             let container = $(template);
             this._autoscrollCheckbox = container.find('#autoscrollCheckbox');
             this._autoscrollCheckbox.change(function () { // note use of function so 'this' is the checkbox
-                if (this.checked) {
-                    _this._router.publishEvent('autoscrollToggled', {shouldAutoScroll: this.checked});
-                }
+                _this._router.publishEvent('autoscrollToggled', {shouldAutoScroll: this.checked});
             });
+            this._eventDetailsDescriptionP = container.find('#eventDetailsDescription');
 
             let inner = $("<div class='inner'></div>");
             container.append(inner);

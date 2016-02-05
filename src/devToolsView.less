@@ -1,15 +1,15 @@
 div#esp-js-devtool-container {
-  position: absolute;
+  position: absolute ! important;
   background: white;
-  right: 0;
+  left: 0;
   top: 0;
+  z-index: 1000001;
   width: 800px;
   border: solid 2px #5F5F5F;
   font-family: Arial, Helvetica, sans-serif;
 
   a:link, a:hover, a:visited, a:active {
     text-decoration: none;
-
     color:#F1F1F1;
     font-size: 16px;
   }
@@ -26,6 +26,12 @@ div#esp-js-devtool-container {
   }
 
   .controls {
+  }
+
+  .eventDetails {
+    display: block;
+    padding: 10px;
+    color: #5F5F5F;
   }
 
   input {

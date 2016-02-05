@@ -1,16 +1,19 @@
 {
   "name": "esp-js-devtools",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "description": "Evented State Processor (ESP) dev tools",
   "main": "dist/esp-js-devtools.js",
   "scripts": {
-    "start": "webpack --progress --watch --colors --hot --debug --display-chunks"
+    "start": "npm run build",
+    "build:dev": "webpack --config webpack.dev.config.js",
+    "dev": "webpack --progress --watch --colors --hot --debug --display-chunks --config webpack.dev.config.js"
   },
   "author": "Dev Shop Limited",
   "license": "Apache 2",
   "repository": "https://github.com/esp/esp-js",
   "dependencies": {
     "babel-plugin-transform-runtime": "^6.4.3",
+    "esp-js": "^0.5.10",
     "install": "^0.4.2",
     "jquery": "^2.2.0",
     "jquery-ui": "^1.10.5",

@@ -10,7 +10,9 @@ export default class DebugToolsModel extends esp.model.DisposableBase {
         this._router = router;
         this._registeredModels = {};
         this._registeredModels = {};
+        this._eventsByNumber = {};
         this._lastEvent = null;
+        this._selectedEvent = null;
         this._updateType = UpdateType.none;
         this._eventCounter = 0;
         this._timerSubscription = null;
@@ -33,6 +35,9 @@ export default class DebugToolsModel extends esp.model.DisposableBase {
     }
     get lastEvent() {
         return this._lastEvent;
+    }
+    get selectedEvent() {
+        return this._selectedEvent;
     }
     get now() {
         return this._now;
@@ -70,6 +75,7 @@ export default class DebugToolsModel extends esp.model.DisposableBase {
         }
         this._eventCounter++;
         this._lastEvent = registeredModel.eventPublished(this._eventCounter, event.modelId, event.eventType);
+        this._eventsByNumber[this._eventCounter] = this._lastEvent;
     }
     _addModel(modelId) {
         this._updateType = UpdateType.modelsChanged;
@@ -84,6 +90,7 @@ export default class DebugToolsModel extends esp.model.DisposableBase {
     @esp.observeEvent('eventSelected')
     _onEventSelected(event) {
         this._shouldAutoScroll = false;
+        this._selectedEvent = this._eventsByNumber[event.eventNumber];
     }
     @esp.observeEvent('disableAutoScroll')
     _onDisableAutoScroll(event) {
