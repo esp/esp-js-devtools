@@ -9,7 +9,6 @@ export default class DebugToolsModel extends esp.model.DisposableBase {
         super();
         this._router = router;
         this._registeredModels = {};
-        this._registeredModels = {};
         this._eventsByNumber = {};
         this._lastEvent = null;
         this._selectedEvent = null;
@@ -23,6 +22,8 @@ export default class DebugToolsModel extends esp.model.DisposableBase {
         });
         this._now = moment();
         this._shouldAutoScroll = true;
+        this._shouldCaptureEvents = true;
+        this._shouldLogToConsole = false;
     }
     static get modelId() {
         return 'esp-debugTools-modelId';
@@ -45,12 +46,23 @@ export default class DebugToolsModel extends esp.model.DisposableBase {
     get shouldAutoScroll() {
         return this._shouldAutoScroll;
     }
+    get totalEventCount() {
+        return this._eventCounter;
+    }
     observeEvents() {
         this.addDisposable(this._router.observeEventsOn(this));
     }
     preProcess() {
         this._updateType = UpdateType.none;
         this._lastEvent = null;
+    }
+    @esp.observeEvent('modelAdded', esp.ObservationStage.preview)
+    @esp.observeEvent('modelRemoved', esp.ObservationStage.preview)
+    @esp.observeEvent('eventPublished', esp.ObservationStage.preview)
+    _previewEvents(event, context) {
+        if(!this._shouldCaptureEvents) {
+            context.cancel();
+        }
     }
     @esp.observeEvent('initEvent')
     _onInitEvent() {
@@ -76,6 +88,9 @@ export default class DebugToolsModel extends esp.model.DisposableBase {
         this._eventCounter++;
         this._lastEvent = registeredModel.eventPublished(this._eventCounter, event.modelId, event.eventType);
         this._eventsByNumber[this._eventCounter] = this._lastEvent;
+        if(this._shouldLogToConsole) {
+            console.log(`[ESP-Event] ModelId:[${event.modelId}] EventType:[${event.eventType}]`, event.event);
+        }
     }
     _addModel(modelId) {
         this._updateType = UpdateType.modelsChanged;
@@ -99,6 +114,19 @@ export default class DebugToolsModel extends esp.model.DisposableBase {
     @esp.observeEvent('autoscrollToggled')
     _onAutoscrollToggled(event) {
         this._shouldAutoScroll = event.shouldAutoScroll;
+    }
+    @esp.observeEvent('captureEventsToggled')
+    _onCaptureEventsToggled(event) {
+        this._shouldCaptureEvents = event.shouldCaptureEvents;
+    }
+    @esp.observeEvent('logEventsConsoleToggled')
+    _onLogEventsConsoleToggled(event) {
+        this._shouldLogToConsole = event.shouldLogToConsole;
+    }
+    @esp.observeEvent('resetChart')
+    _onResetChart() {
+        this._updateType = UpdateType.reset;
+        this._registeredModels = {};
     }
     _startTimer() {
         // start a timer so we can keep moving the chart forward

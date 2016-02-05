@@ -3,5 +3,8 @@ class UpdateType {
     static get modelsChanged() { return 'modelsChanged'; };
     static get eventsChanged() { return 'eventsChanged'; };
     static get timeChanged() { return 'timeChanged'; };
+    static get reset() { return 'reset'; };
 }
 export default UpdateType;
+
+

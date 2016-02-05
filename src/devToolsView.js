@@ -20,7 +20,11 @@ export default class DevToolsView extends esp.model.DisposableBase {
         this._timelineData = new vis.DataSet();
         this._timeline = null;
         this._autoscrollCheckbox = null;
+        this._captureEventsCheckbox = null;
+        this._logEventsConsoleCheckbox = null;
+        this._resetChartButton = null;
         this._eventDetailsDescriptionP = null;
+        this._footer = null;
     }
 
     start() {
@@ -42,21 +46,26 @@ export default class DevToolsView extends esp.model.DisposableBase {
                             group: model.lastEvent.modelId,
                             title: model.lastEvent.eventType,
                             start: model.lastEvent.publishedTime,
+                            className: 'eventDot'
                         });
+                    } else if (model.updateType === UpdateType.reset) {
+                        this._timelineGroups.clear();
+                        this._timelineData.clear();
                     }
 
-                    if (this._timeline && this._autoscrollCheckbox) {
+                    if (this._timeline) {
                         this._timeline.setOptions({max: moment().add(2, 'm')})
                         if (model.shouldAutoScroll) {
                             this._setTimelineWindow();
                         }
-                        if(this._autoscrollCheckbox.prop('checked') !== model.shouldAutoScroll) {
+                        if (this._autoscrollCheckbox.prop('checked') !== model.shouldAutoScroll) {
                             this._autoscrollCheckbox.prop('checked', model.shouldAutoScroll);
                         }
 
-                        if(this._eventDetailsDescriptionP && model.selectedEvent) {
+                        if (this._eventDetailsDescriptionP && model.selectedEvent) {
                             this._eventDetailsDescriptionP.html(JSON.stringify(model.selectedEvent));
                         }
+                        this._footer.html(`Total events: ${model.totalEventCount}`);
                     }
                 })
         );
@@ -66,18 +75,27 @@ export default class DevToolsView extends esp.model.DisposableBase {
         let _this = this;
         $(() => {
             let container = $(template);
+            // note use of function so 'this' is the checkbox
             this._autoscrollCheckbox = container.find('#autoscrollCheckbox');
-            this._autoscrollCheckbox.change(function () { // note use of function so 'this' is the checkbox
+            this._autoscrollCheckbox.change(function () {
                 _this._router.publishEvent('autoscrollToggled', {shouldAutoScroll: this.checked});
             });
-            this._eventDetailsDescriptionP = container.find('#eventDetailsDescription');
-
-            let inner = $("<div class='inner'></div>");
-            container.append(inner);
-            container.draggable({
-                cursor: 'move',
-                handle: '#header'
+            this._captureEventsCheckbox = container.find('#captureEvents');
+            this._captureEventsCheckbox.change(function () {
+                _this._router.publishEvent('captureEventsToggled', {shouldCaptureEvents: this.checked});
             });
+            this._logEventsConsoleCheckbox = container.find('#logEventsConsole');
+            this._logEventsConsoleCheckbox.change(function () {
+                _this._router.publishEvent('logEventsConsoleToggled', {shouldLogToConsole: this.checked});
+            });
+            this._resetChartButton = container.find('#resetChart');
+            this._resetChartButton.click(function () {
+                _this._router.publishEvent('resetChart', {});
+            });
+            this._eventDetailsDescriptionP = container.find('#eventDetailsDescription');
+            this._footer = container.find('#footer');
+
+            let chartContainer = container.find('#chartContainer');
             let options = {
                 groupOrder: 'content',
                 showCurrentTime: true,
@@ -90,13 +108,18 @@ export default class DevToolsView extends esp.model.DisposableBase {
                 // zoomMin: 1000 * 60 * 60 * 24,             // one day in milliseconds
                 //zoomMax: 1000 * 60 * 60 * 24     // one day in milliseconds
             };
-            this._timeline = new vis.Timeline(inner[0]);
+            this._timeline = new vis.Timeline(chartContainer[0]);
             this._timeline.setOptions(options);
             this._timeline.setGroups(this._timelineGroups);
             this._timeline.setItems(this._timelineData);
             this._wireUpTimelineEvents(this._timeline);
             this._setTimelineWindow();
             $('body').append(container);
+            // need to do this after it's been appended to the dome, else it addes a relative styling
+            container.draggable({
+                cursor: 'move',
+                handle: '#header'
+            });
         });
     }
 
@@ -113,10 +136,18 @@ export default class DevToolsView extends esp.model.DisposableBase {
                 }
             );
         });
-        timeline.on('click', properties => { this._disableAutoScroll() });
-        timeline.on('doubleClick', properties => { this._disableAutoScroll() });
-        timeline.on('timechanged', properties => { this._disableAutoScroll() });
-        timeline.on('groupDragged', properties => { this._disableAutoScroll() });
+        timeline.on('click', properties => {
+            this._disableAutoScroll()
+        });
+        timeline.on('doubleClick', properties => {
+            this._disableAutoScroll()
+        });
+        timeline.on('timechanged', properties => {
+            this._disableAutoScroll()
+        });
+        timeline.on('groupDragged', properties => {
+            this._disableAutoScroll()
+        });
     }
 
     _disableAutoScroll() {

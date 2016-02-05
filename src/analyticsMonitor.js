@@ -8,9 +8,9 @@ export default class AnalyticsMonitor {
         if(modelId === DebugToolsModel.modelId) return;
         this._router.publishEvent('modelAdded', {modelId: modelId});
     }
-    publishEvent(modelId, eventType) {
+    publishEvent(modelId, eventType, event) {
         if(modelId === DebugToolsModel.modelId) return;
-        this._router.publishEvent('eventPublished', {modelId: modelId, eventType: eventType});
+        this._router.publishEvent('eventPublished', {modelId: modelId, eventType: eventType, event:event});
     }
     broadcastEvent(eventType) {
     }
