@@ -1,4 +1,4 @@
-import DebugToolsModel from './debugToolsModel';
+import DebugToolsModel from './devToolsModel';
 
 export default class AnalyticsMonitor {
     constructor(router) {

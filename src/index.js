@@ -1,9 +1,7 @@
-//import 'script!jquery';
-//import 'script!jquery-ui/draggable';
-
-import { default as registerDevTools } from './registerDevTools';
-
+import { registerDevTools, unregisterDevTools } from './devtoolsHooks';
 export { registerDevTools };
+export { unregisterDevTools };
 export default {
-    registerDevTools
+    registerDevTools,
+    unregisterDevTools
 }

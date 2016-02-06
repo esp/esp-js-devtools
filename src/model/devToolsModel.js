@@ -3,8 +3,9 @@ import _ from 'lodash';
 import moment from 'moment';
 import UpdateType from './updateType';
 import RegisteredModel from './registeredModel';
+import { unregisterDevTools } from '../devtoolsHooks';
 
-export default class DebugToolsModel extends esp.model.DisposableBase {
+export default class DevToolsModel extends esp.model.DisposableBase {
     constructor(router) {
         super();
         this._router = router;
@@ -15,18 +16,13 @@ export default class DebugToolsModel extends esp.model.DisposableBase {
         this._updateType = UpdateType.none;
         this._eventCounter = 0;
         this._timerSubscription = null;
-        this.addDisposable(() => {
-            if(this._timerSubscription != null) {
-                clearInterval(this._timerSubscription);
-            }
-        });
         this._now = moment();
         this._shouldAutoScroll = true;
         this._shouldCaptureEvents = true;
         this._shouldLogToConsole = false;
     }
     static get modelId() {
-        return 'esp-debugTools-modelId';
+        return 'esp-debugTools';
     }
     get updateType() {
         return this._updateType;
@@ -60,7 +56,7 @@ export default class DebugToolsModel extends esp.model.DisposableBase {
     @esp.observeEvent('modelRemoved', esp.ObservationStage.preview)
     @esp.observeEvent('eventPublished', esp.ObservationStage.preview)
     _previewEvents(event, context) {
-        if(!this._shouldCaptureEvents) {
+        if(!this._shouldCaptureEvents || this.isDisposed) {
             context.cancel();
         }
     }
@@ -125,8 +121,15 @@ export default class DebugToolsModel extends esp.model.DisposableBase {
     }
     @esp.observeEvent('resetChart')
     _onResetChart() {
-        this._updateType = UpdateType.reset;
-        this._registeredModels = {};
+        this._reset();
+    }
+    @esp.observeEvent('close')
+    _onClose() {
+        unregisterDevTools();
+    }
+    dispose() {
+        super.dispose();
+        this._stopTimer();
     }
     _startTimer() {
         // start a timer so we can keep moving the chart forward
@@ -136,5 +139,14 @@ export default class DebugToolsModel extends esp.model.DisposableBase {
                 this._now = moment();
             });
         }, 1000);
+    }
+    _reset() {
+        this._updateType = UpdateType.reset;
+        this._registeredModels = {};
+    }
+    _stopTimer() {
+        if(this._timerSubscription != null) {
+            clearInterval(this._timerSubscription);
+        }
     }
 }
