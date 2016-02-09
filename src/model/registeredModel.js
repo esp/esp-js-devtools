@@ -3,12 +3,12 @@ import DataPoint from './dataPoint';
 
 export default class RegisteredModel {
     constructor(modelId) {
-        this._modelId = modelId;
+        this._devToolsModelId = modelId;
         this._isHalted = false;
         this._haltingError = null;
     }
     get modelId() {
-        return this._modelId;
+        return this._devToolsModelId;
     }
     get isHalted() {
         return this._isHalted;

@@ -12,7 +12,7 @@ import DataPointType from '../model/dataPointType';
 
 export default class DevToolsView extends esp.model.DisposableBase {
 
-    constructor(router) {
+    constructor(modelId, router) {
         super();
         this._router = router;
         this._timelineGroups = new vis.DataSet();
@@ -23,16 +23,19 @@ export default class DevToolsView extends esp.model.DisposableBase {
         this._logEventsConsoleCheckbox = null;
         this._resetChartButton = null;
         this._closeButton = null;
+        this._ringBufferSizeInput = null;
         this._eventDetailsDescriptionP = null;
         this._footer = null;
+        this._modelId = modelId;
     }
 
     start() {
         this._createDevToolsElements();
+        let isStateOfTheWorld = true;
         this.addDisposable(
-            this._router.getModelObservable()
+            this._router.getModelObservable(this._modelId)
                 .observe(model => {
-                    if (model.updateType.indexOf(UpdateType.modelsChanged) >= 0) {
+                    if (isStateOfTheWorld || model.updateType.indexOf(UpdateType.modelsChanged) >= 0) {
                         for (let i = 0; i < model.registeredModels.length; i++) {
                             let registeredModel = model.registeredModels[i];
                             let groupStyle = registeredModel.isHalted
@@ -45,9 +48,12 @@ export default class DevToolsView extends esp.model.DisposableBase {
                             });
                         }
                     }
-                    if (model.updateType.indexOf(UpdateType.eventsChanged) >= 0) {
-                        for (var i = 0; i < model.newDataPoints.length; i++) {
-                            var dataPoint = model.newDataPoints[i];
+                    if (isStateOfTheWorld || model.updateType.indexOf(UpdateType.eventsChanged) >= 0) {
+                        let points = isStateOfTheWorld
+                            ? model.dataPoints
+                            : model.newDataPoints;
+                        for (var i = 0; i < points.length; i++) {
+                            var dataPoint = points[i];
                             let pointStyle = dataPoint.pointType == DataPointType.routerHalted
                                 ? 'background:red'
                                 : '';
@@ -78,8 +84,12 @@ export default class DevToolsView extends esp.model.DisposableBase {
                         if (this._eventDetailsDescriptionP && model.selectedDataPoint) {
                             this._eventDetailsDescriptionP.html(JSON.stringify(model.selectedDataPoint));
                         }
+                        if(this._ringBufferSizeInput && !this._ringBufferSizeInput.is(":focus")) {
+                            this._ringBufferSizeInput.val(model.dataPointBufferSize);
+                        }
                         this._footer.html(`Total events: ${model.processedDataPointCount}`);
                     }
+                    isStateOfTheWorld = false;
                 })
         );
     }
@@ -91,36 +101,42 @@ export default class DevToolsView extends esp.model.DisposableBase {
             // note use of function so 'this' is the checkbox
             this._autoscrollCheckbox = container.find('#autoscrollCheckbox');
             this._autoscrollCheckbox.change(function () {
-                _this._router.publishEvent('autoscrollToggled', {shouldAutoScroll: this.checked});
+                _this._router.publishEvent(_this._modelId, 'autoscrollToggled', {shouldAutoScroll: this.checked});
             });
             this.addDisposable(() => {this._autoscrollCheckbox.off();});
 
             this._captureEventsCheckbox = container.find('#captureEvents');
             this._captureEventsCheckbox.change(function () {
-                _this._router.publishEvent('captureEventsToggled', {shouldCaptureEvents: this.checked});
+                _this._router.publishEvent(_this._modelId,'captureEventsToggled', {shouldCaptureEvents: this.checked});
             });
             this.addDisposable(() => {this._captureEventsCheckbox.off();});
 
             this._logEventsConsoleCheckbox = container.find('#logEventsConsole');
             this._logEventsConsoleCheckbox.change(function () {
-                _this._router.publishEvent('logEventsConsoleToggled', {shouldLogToConsole: this.checked});
+                _this._router.publishEvent(_this._modelId,'logEventsConsoleToggled', {shouldLogToConsole: this.checked});
             });
             this.addDisposable(() => {this._logEventsConsoleCheckbox.off();});
 
             this._resetChartButton = container.find('#resetChart');
             this._resetChartButton.click(function () {
-                _this._router.publishEvent('resetChart', {});
+                _this._router.publishEvent(_this._modelId,'resetChart', {});
             });
             this.addDisposable(() => {this._resetChartButton.off();});
 
             this._closeButton = container.find('#closeButton');
             this._closeButton.click(function () {
-                _this._router.publishEvent('close', {});
+                _this.dispose();
             });
             this.addDisposable(() => {this._closeButton.off();});
 
             this._eventDetailsDescriptionP = container.find('#eventDetailsDescription');
             this._footer = container.find('#footer');
+
+            this._ringBufferSizeInput = container.find('#ringBufferSize');
+            this._ringBufferSizeInput.change(function () {
+                _this._router.publishEvent(_this._modelId,'ringBufferSizeInputChanged', this.value);
+            });
+            this.addDisposable(() => {this._ringBufferSizeInput.off();});
 
             let chartContainer = container.find('#chartContainer');
             let options = {
@@ -158,6 +174,7 @@ export default class DevToolsView extends esp.model.DisposableBase {
         timeline.on('select', properties => {
             let pointId = properties.items[0];
             this._router.publishEvent(
+                this._modelId,
                 'pointSelected', {
                     pointId: pointId
                 }
@@ -178,6 +195,6 @@ export default class DevToolsView extends esp.model.DisposableBase {
     }
 
     _disableAutoScroll() {
-        this._router.publishEvent('disableAutoScroll', {});
+        this._router.publishEvent(this._modelId, 'disableAutoScroll', {});
     }
 }

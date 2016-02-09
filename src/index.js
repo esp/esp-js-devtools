@@ -1,7 +1,5 @@
-import { registerDevTools, unregisterDevTools } from './devtoolsHooks';
+import { registerDevTools } from './devtoolsHooks';
 export { registerDevTools };
-export { unregisterDevTools };
 export default {
-    registerDevTools,
-    unregisterDevTools
+    registerDevTools
 }

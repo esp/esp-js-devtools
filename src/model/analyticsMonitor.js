@@ -1,16 +1,17 @@
 import DebugToolsModel from './devToolsModel';
 
 export default class AnalyticsMonitor {
-    constructor(router) {
+    constructor(devToolsModelId, router) {
         this._router = router;
+        this._devToolsModelId = devToolsModelId;
     }
     addModel(modelId) {
         if(modelId === DebugToolsModel.modelId) return;
-        this._router.publishEvent('modelAdded', {modelId: modelId});
+        this._router.publishEvent(this._devToolsModelId, 'modelAdded', {modelId: modelId});
     }
     publishEvent(modelId, eventType, event) {
         if(modelId === DebugToolsModel.modelId) return;
-        this._router.publishEvent('eventPublished', {modelId: modelId, eventType: eventType, event:event});
+        this._router.publishEvent(this._devToolsModelId,'eventPublished', {modelId: modelId, eventType: eventType, event:event});
     }
     broadcastEvent(eventType) {
     }
@@ -50,7 +51,7 @@ export default class AnalyticsMonitor {
     }
     halted(modelIds, err) {
         if(modelIds.indexOf(DebugToolsModel.modelId) >=0 ) return;
-        this._router.publishEvent('routerHalted', {modelIds: modelIds, err: err});
+        this._router.publishEvent(this._devToolsModelId, 'routerHalted', {modelIds: modelIds, err: err});
     }
     registerMonitor(devToolsDiagnosticMonitor) {
 

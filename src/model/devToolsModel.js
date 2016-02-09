@@ -4,7 +4,6 @@ import moment from 'moment';
 import UpdateType from './updateType';
 import RegisteredModel from './registeredModel';
 import DataPoint from './dataPoint';
-import { unregisterDevTools } from '../devtoolsHooks';
 import DataPointType from './dataPointType';
 
 export default class DevToolsModel extends esp.model.DisposableBase {
@@ -24,7 +23,7 @@ export default class DevToolsModel extends esp.model.DisposableBase {
         this._shouldAutoScroll = true;
         this._shouldCaptureEvents = true;
         this._shouldLogToConsole = false;
-        this._eventBufferSize = 200;
+        this._dataPointBufferSize = 200;
     }
     static get modelId() {
         return 'esp-debugTools';
@@ -34,6 +33,9 @@ export default class DevToolsModel extends esp.model.DisposableBase {
     }
     get registeredModels() {
         return _.values(this._registeredModels);
+    }
+    get dataPoints() {
+        return this._dataPoints;
     }
     get newDataPoints() {
         return this._newDataPoints;
@@ -53,8 +55,11 @@ export default class DevToolsModel extends esp.model.DisposableBase {
     get processedDataPointCount() {
         return this._processedDataPointCount;
     }
+    get dataPointBufferSize() {
+        return this._dataPointBufferSize;
+    }
     observeEvents() {
-        this.addDisposable(this._router.observeEventsOn(this));
+        this.addDisposable(this._router.observeEventsOn(DevToolsModel.modelId, this));
     }
     preProcess() {
         this._updateType = [];
@@ -126,8 +131,8 @@ export default class DevToolsModel extends esp.model.DisposableBase {
         this._dataPoints.push(dataPoint);
         this._newDataPoints.push(dataPoint);
         this._processedDataPointCount++;
-        if(this._processedDataPointCount > this._eventBufferSize) {
-            let numberToRemove = this._dataPoints.length - this._eventBufferSize;
+        if(this._processedDataPointCount > this._dataPointBufferSize) {
+            let numberToRemove = this._dataPoints.length - this._dataPointBufferSize;
             let removedItems = this._dataPoints.splice(0, numberToRemove);
             for (let i = 0; i < removedItems.length; i++) {
                 let dataPointToRemove = removedItems[i];
@@ -161,9 +166,12 @@ export default class DevToolsModel extends esp.model.DisposableBase {
     _onResetChart() {
         this._reset();
     }
-    @esp.observeEvent('close')
-    _onClose() {
-        unregisterDevTools();
+    @esp.observeEvent('ringBufferSizeInputChanged')
+    _onRingBufferSizeInputChanged(value) {
+        let newDataPointBufferSize = Number(value);
+        if(!isNaN(newDataPointBufferSize)) {
+            this._dataPointBufferSize = newDataPointBufferSize;
+        }
     }
     dispose() {
         super.dispose();
@@ -172,11 +180,13 @@ export default class DevToolsModel extends esp.model.DisposableBase {
     _startTimer() {
         // start a timer so we can keep moving the chart forward
         this._timerSubscription = setInterval(() => {
-            this._router.runAction(() => {
-                this._updateType.push(UpdateType.timeChanged);
-                this._now = moment();
-            });
-        }, 1000);
+            this._router.runAction(
+                DevToolsModel.modelId, () => {
+                    this._updateType.push(UpdateType.timeChanged);
+                    this._now = moment();
+                }
+            );
+        }, 5000);
     }
     _reset() {
         this._updateType.push(UpdateType.reset);

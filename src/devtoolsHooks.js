@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import esp from 'esp-js';
 import AnalyticsMonitor from './model/analyticsMonitor';
 import DevToolsModel from './model/devToolsModel';
@@ -11,20 +12,32 @@ class Controller {
     }
     start() {
         this._router = new esp.Router();
-        let modelRouter = this._router.createModelRouter(DevToolsModel.modelId);
-        this._model = new DevToolsModel(modelRouter);
+        this._model = new DevToolsModel(this._router);
         this._router.addModel(DevToolsModel.modelId, this._model);
-        this._view = new DevToolsView(modelRouter);
-        window.__espAnalyticsMonitor = new AnalyticsMonitor(modelRouter);
-        this._view.start();
+        window.__espAnalyticsMonitor = new AnalyticsMonitor(DevToolsModel.modelId, this._router);
         this._model.observeEvents();
         this._router.publishEvent(DevToolsModel.modelId, 'initEvent', {});
+        $(document).keyup(this._openDevToolsOnKeyboardShortcut.bind(this));
     }
     dispose() {
         window.__espAnalyticsMonitor = null;
+        $(document).unbind('keyup', this._openDevToolsOnKeyboardShortcut);
         this._router.dispose();
         this._model.dispose();
         this._view.dispose();
+    }
+    closeView() {
+        this._view.dispose();
+        this._view = null;
+    }
+    _openDevToolsOnKeyboardShortcut(event) {
+        event = event || window.event;
+        if(event.keyCode== 68 && event.ctrlKey && event.altKey) {
+            if(this._view !== null) {
+                this._view = new DevToolsView(DevToolsModel.modelId, this._router);
+                this._view.start();
+            }
+        }
     }
 }
 
@@ -41,10 +54,4 @@ export function registerDevTools() {
     isRegistered = true;
     controller = new Controller();
     controller.start();
-}
-
-export function unregisterDevTools() {
-    controller.dispose();
-    controller = null;
-    isRegistered = false;
 }

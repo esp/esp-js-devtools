@@ -6,7 +6,7 @@ export default class DataPoint {
         this._pointId = dataPointId++;
         this._data = data;
         this._publishedTime = publishedTime;
-        this._modelId = modelId;
+        this._devToolsModelId = modelId;
         this._pointType = pointType;
     }
     get pointId() {
@@ -19,7 +19,7 @@ export default class DataPoint {
         return this._publishedTime;
     }
     get modelId() {
-        return this._modelId;
+        return this._devToolsModelId;
     }
     get pointType() {
         return this._pointType;
