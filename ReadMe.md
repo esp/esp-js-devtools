@@ -3,11 +3,38 @@
 
 # Evented State Processor (ESP) Dev Tools
 
-Dev tools coming soon. Watch this space...
+The esp-js devtools give you the ability to monitor activity of all models in all routers.
+
+Features:
+* A real-time view of events and errors as they are processed by your models.
+* Ability to zoom to the nth degree.
+* Ability to log the entire event to the browsers console.
+* Can be opened and closed (it's currently implemented as a floating div).
+
+![screenshot](./screenshots/screenshot.png)
+
+# Installation
+Install from npm: `npm install --save esp-js-devtools`.
+
+Wire it up early on in your app:
+
+```
+import espDevTools from 'esp-js-devtools';
+espDevTools.registerDevTools();
+```
+
+# Activation 
+
+It's activate using a keyboard shortcut: `ctrl + alt + d`. 
+
+#  Demo
+
+For a demo check out the esp port of the [react chat app](https://github.com/esp/esp-js/tree/master/examples/esp-chat-react-es6).
 
 # ESP Documentation
 
 [http://esp.readthedocs.org](http://esp.readthedocs.org).
 
-# Installation
-Install from npm: `npm install esp-js-devtools --save`.
+# Licence 
+
+Apache 2
