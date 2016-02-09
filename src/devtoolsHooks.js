@@ -33,7 +33,7 @@ class Controller {
     _openDevToolsOnKeyboardShortcut(event) {
         event = event || window.event;
         if(event.keyCode== 68 && event.ctrlKey && event.altKey) {
-            if(this._view !== null) {
+            if(this._view === null) {
                 this._view = new DevToolsView(DevToolsModel.modelId, this._router);
                 this._view.start();
             }
