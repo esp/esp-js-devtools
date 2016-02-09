@@ -50,7 +50,7 @@ export default class AnalyticsMonitor {
     }
     halted(modelIds, err) {
         if(modelIds.indexOf(DebugToolsModel.modelId) >=0 ) return;
-        this._router.publishEvent('halted', {modelIds: modelIds, err: err});
+        this._router.publishEvent('routerHalted', {modelIds: modelIds, err: err});
     }
     registerMonitor(devToolsDiagnosticMonitor) {
 

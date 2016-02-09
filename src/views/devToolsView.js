@@ -8,6 +8,7 @@ import 'vis/dist/vis.css';
 import './devToolsView.less'
 import UpdateType from '../model/updateType';
 import template from './devToolsView.template.html';
+import DataPointType from '../model/dataPointType';
 
 export default class DevToolsView extends esp.model.DisposableBase {
 
@@ -31,26 +32,41 @@ export default class DevToolsView extends esp.model.DisposableBase {
         this.addDisposable(
             this._router.getModelObservable()
                 .observe(model => {
-                    if (model.updateType === UpdateType.modelsChanged) {
-                        for (var i = 0; i < model.registeredModels.length; i++) {
-                            var registeredModel = model.registeredModels[i];
+                    if (model.updateType.indexOf(UpdateType.modelsChanged) >= 0) {
+                        for (let i = 0; i < model.registeredModels.length; i++) {
+                            let registeredModel = model.registeredModels[i];
+                            let groupStyle = registeredModel.isHalted
+                                ? 'background:red'
+                                : '';
                             this._timelineGroups.update({
                                 id: registeredModel.modelId,
-                                content: registeredModel.modelId
+                                content: registeredModel.modelId,
+                                style:groupStyle
                             });
                         }
-                    } else if (model.updateType === UpdateType.eventsChanged) {
-                        this._timelineData.add({
-                            id: model.lastEvent.eventNumber,
-                            group: model.lastEvent.modelId,
-                            title: model.lastEvent.eventType,
-                            start: model.lastEvent.publishedTime
-                        });
-                    } else if (model.updateType === UpdateType.reset) {
+                    }
+                    if (model.updateType.indexOf(UpdateType.eventsChanged) >= 0) {
+                        for (var i = 0; i < model.newDataPoints.length; i++) {
+                            var dataPoint = model.newDataPoints[i];
+                            let pointStyle = dataPoint.pointType == DataPointType.routerHalted
+                                ? 'background:red'
+                                : '';
+                            this._timelineData.add({
+                                id: dataPoint.pointId,
+                                group: dataPoint.modelId,
+                                title: dataPoint.data,
+                                start: dataPoint.publishedTime,
+                                style: pointStyle
+                            });
+                        }
+                        if(model.dataPointsIdsToRemove.length > 0) {
+                            this._timelineData.remove(model.dataPointsIdsToRemove);
+                        }
+                    }
+                    if (model.updateType.indexOf(UpdateType.reset) >= 0) {
                         this._timelineGroups.clear();
                         this._timelineData.clear();
                     }
-
                     if (this._timeline) {
                         this._timeline.setOptions({max: moment().add(2, 'm')})
                         if (model.shouldAutoScroll) {
@@ -59,11 +75,10 @@ export default class DevToolsView extends esp.model.DisposableBase {
                         if (this._autoscrollCheckbox.prop('checked') !== model.shouldAutoScroll) {
                             this._autoscrollCheckbox.prop('checked', model.shouldAutoScroll);
                         }
-
-                        if (this._eventDetailsDescriptionP && model.selectedEvent) {
-                            this._eventDetailsDescriptionP.html(JSON.stringify(model.selectedEvent));
+                        if (this._eventDetailsDescriptionP && model.selectedDataPoint) {
+                            this._eventDetailsDescriptionP.html(JSON.stringify(model.selectedDataPoint));
                         }
-                        this._footer.html(`Total events: ${model.totalEventCount}`);
+                        this._footer.html(`Total events: ${model.processedDataPointCount}`);
                     }
                 })
         );
@@ -143,8 +158,8 @@ export default class DevToolsView extends esp.model.DisposableBase {
         timeline.on('select', properties => {
             let pointId = properties.items[0];
             this._router.publishEvent(
-                'eventSelected', {
-                    eventNumber: pointId
+                'pointSelected', {
+                    pointId: pointId
                 }
             );
         });
