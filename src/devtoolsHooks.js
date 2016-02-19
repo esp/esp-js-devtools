@@ -23,14 +23,15 @@ import DevToolsModel from './model/devToolsModel';
 import DevToolsView from './views/devToolsView';
 
 class Controller {
-    constructor() {
+    constructor(options) {
         this._model = null;
         this._view = null;
         this._router = null;
+        this._options = options;
     }
     start() {
         this._router = new esp.Router();
-        this._model = new DevToolsModel(this._router);
+        this._model = new DevToolsModel(this._router, this._options);
         this._router.addModel(DevToolsModel.modelId, this._model);
         window.__espAnalyticsMonitor = new AnalyticsMonitor(DevToolsModel.modelId, this._router);
         this._model.observeEvents();
@@ -47,15 +48,18 @@ class Controller {
     _openDevToolsOnKeyboardShortcut(event) {
         event = event || window.event;
         if(event.keyCode== 68 && event.ctrlKey && event.altKey) {
-            if(this._view === null) {
-                this._view = new DevToolsView(DevToolsModel.modelId, this._router);
-                this._view.start();
-                this._view.addDisposable(
-                    () => {
-                        this._view = null;
-                    }
-                );
-            }
+            this.tryOpenDevTools();
+        }
+    }
+    tryOpenDevTools() {
+        if(this._view === null) {
+            this._view = new DevToolsView(DevToolsModel.modelId, this._router);
+            this._view.start();
+            this._view.addDisposable(
+                () => {
+                    this._view = null;
+                }
+            );
         }
     }
 }
@@ -63,14 +67,18 @@ class Controller {
 let isRegistered = false;
 let controller;
 
-export function registerDevTools() {
+export function registerDevTools(options) {
     if (isRegistered) {
         return;
     }
     if (typeof window === 'undefined') {
         throw new Error('window is undefined. esp-devtools needs window to add a hook to window for all routers to interact with');
     }
+    let devToolsOptions = options || {};
     isRegistered = true;
-    controller = new Controller();
+    controller = new Controller(devToolsOptions);
     controller.start();
+    if(devToolsOptions.displayOnStartup) {
+        controller.tryOpenDevTools();
+    }
 }

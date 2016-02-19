@@ -25,7 +25,7 @@ import DataPoint from './dataPoint';
 import DataPointType from './dataPointType';
 
 export default class DevToolsModel extends esp.model.DisposableBase {
-    constructor(router) {
+    constructor(router, options) {
         super();
         this._router = router;
         this._registeredModels = {};
@@ -40,7 +40,7 @@ export default class DevToolsModel extends esp.model.DisposableBase {
         this._now = moment();
         this._shouldAutoScroll = true;
         this._shouldCaptureEvents = true;
-        this._shouldLogToConsole = false;
+        this._shouldLogToConsole = options.logEventsToConsole ? true : false;
         this._dataPointBufferSize = 200;
     }
     static get modelId() {
