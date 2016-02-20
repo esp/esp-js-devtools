@@ -27,6 +27,10 @@ export default class AnalyticsMonitor {
         if(modelId === DebugToolsModel.modelId) return;
         this._router.publishEvent(this._devToolsModelId, 'modelAdded', {modelId: modelId});
     }
+    removeModel(modelId) {
+        if(modelId === DebugToolsModel.modelId) return;
+        this._router.publishEvent(this._devToolsModelId, 'modelRemoved', {modelId: modelId});
+    }
     publishEvent(modelId, eventType, event) {
         if(modelId === DebugToolsModel.modelId) return;
         this._router.publishEvent(this._devToolsModelId,'eventPublished', {modelId: modelId, eventType: eventType, event:event});

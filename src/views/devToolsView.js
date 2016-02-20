@@ -99,6 +99,9 @@ export default class DevToolsView extends esp.model.DisposableBase {
                         if (this._autoscrollCheckbox.prop('checked') !== model.shouldAutoScroll) {
                             this._autoscrollCheckbox.prop('checked', model.shouldAutoScroll);
                         }
+                        if (this._logEventsConsoleCheckbox.prop('checked') !== model.shouldLogToConsole) {
+                            this._logEventsConsoleCheckbox.prop('checked', model.shouldLogToConsole);
+                        }
                         if (this._eventDetailsDescriptionP && model.selectedDataPoint) {
                             this._eventDetailsDescriptionP.html(JSON.stringify(model.selectedDataPoint));
                         }
