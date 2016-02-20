@@ -53,13 +53,18 @@ class Controller {
     }
     tryOpenDevTools() {
         if(this._view === null) {
-            this._view = new DevToolsView(DevToolsModel.modelId, this._router);
-            this._view.start();
-            this._view.addDisposable(
-                () => {
-                    this._view = null;
-                }
-            );
+            try {
+                this._view = new DevToolsView(DevToolsModel.modelId, this._router);
+                this._view.start();
+                this._view.addDisposable(
+                    () => {
+                        this._view = null;
+                    }
+                );
+            } catch (err) {
+                alert(`Error opening dev tools ${err}`);
+            }
+
         }
     }
 }

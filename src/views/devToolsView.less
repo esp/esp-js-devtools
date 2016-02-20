@@ -15,6 +15,13 @@ div#esp-js-devtool-container {
     color: #5F5F5F;
   }
 
+  // hide vertical lines and corrosponding dots on the timeline.
+  // we could use a 'type' of 'point', however that seems to be styled to allow a label which we don't use
+  .vis-line, .vis-dot {
+    display: none;
+  }
+
+
   a:link, a:hover, a:visited, a:active {
     text-decoration: none;
     font-size: 16px;

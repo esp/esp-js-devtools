@@ -1,6 +1,6 @@
 {
   "name": "esp-js-devtools",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Evented State Processor (ESP) dev tools",
   "main": "dist/esp-js-devtools.js",
   "scripts": {
@@ -13,7 +13,7 @@
   "repository": "https://github.com/esp/esp-js",
   "dependencies": {
     "babel-plugin-transform-runtime": "^6.4.3",
-    "esp-js": "^0.5.15",
+    "esp-js": "^0.5.16",
     "install": "^0.4.2",
     "jquery": "^2.2.0",
     "jquery-ui": "^1.10.5",

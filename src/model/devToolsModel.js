@@ -67,6 +67,9 @@ export default class DevToolsModel extends esp.model.DisposableBase {
     get shouldAutoScroll() {
         return this._shouldAutoScroll;
     }
+    get shouldLogToConsole() {
+        return this._shouldLogToConsole;
+    }
     get dataPointsIdsToRemove() {
         return this._dataPointsIdsToRemove;
     }
