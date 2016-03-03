@@ -24,7 +24,7 @@ import RegisteredModel from './registeredModel';
 import DataPoint from './dataPoint';
 import DataPointType from './dataPointType';
 
-export default class DevToolsModel extends esp.model.DisposableBase {
+export default class DevToolsModel extends esp.DisposableBase {
     constructor(router, options) {
         super();
         this._router = router;
@@ -39,9 +39,15 @@ export default class DevToolsModel extends esp.model.DisposableBase {
         this._timerSubscription = null;
         this._now = moment();
         this._shouldAutoScroll = true;
-        this._shouldCaptureEvents = true;
-        this._shouldLogToConsole = options.logEventsToConsole ? true : false;
-        this._dataPointBufferSize = 200;
+        this._shouldCaptureEvents = typeof options.shouldCaptureEvents === 'undefined'
+            ? true
+            : options.shouldCaptureEvents === true;
+        this._shouldLogToConsole = typeof options.logEventsToConsole === 'undefined'
+            ? false
+            : options.logEventsToConsole === true;
+        this._dataPointBufferSize = typeof options.dataPointBufferSize === 'undefined' || isNaN(options.dataPointBufferSize)
+            ? 500
+            : options.dataPointBufferSize;
     }
     static get modelId() {
         return 'esp-debugTools';
@@ -90,6 +96,8 @@ export default class DevToolsModel extends esp.model.DisposableBase {
     @esp.observeEvent('modelAdded', esp.ObservationStage.preview)
     @esp.observeEvent('modelRemoved', esp.ObservationStage.preview)
     @esp.observeEvent('eventPublished', esp.ObservationStage.preview)
+    @esp.observeEvent('runAction', esp.ObservationStage.preview)
+    @esp.observeEvent('executingEvent', esp.ObservationStage.preview)
     _previewEvents(event, context) {
         if(!this._shouldCaptureEvents || this.isDisposed) {
             context.cancel();
@@ -111,16 +119,23 @@ export default class DevToolsModel extends esp.model.DisposableBase {
     }
     @esp.observeEvent('eventPublished')
     _onEventPublished(event) {
-        this._updateType.push(UpdateType.eventsChanged);
-        let registeredModel = this._registeredModels[event.modelId];
-        if (!registeredModel) {
-            this._addModel(event.modelId);
-        }
-        var dataPoint = new DataPoint(moment(), event.eventType, event.modelId, DataPointType.eventPublished);
-        this._addDataPoint(dataPoint);
-        if(this._shouldLogToConsole) {
-            console.log(`[ESP-Event] ModelId:[${event.modelId}] EventType:[${event.eventType}]`, event.event);
-        }
+        this._recordEvent(event.modelId, event.eventType, DataPointType.eventPublished, event.event);
+    }
+    @esp.observeEvent('broadcastEvent')
+    _onBroadcastEvent(event) {
+
+    }
+    @esp.observeEvent('executingEvent')
+    _onExecutingEvent(event) {
+
+    }
+    @esp.observeEvent('runAction')
+    _onRunAction(event) {
+        this._recordEvent(event.modelId, '__runAction', DataPointType.actionRan);
+    }
+    @esp.observeEvent('eventIgnored')
+    _onEventIgnored(event) {
+
     }
     @esp.observeEvent('routerHalted')
     _onRouterHalted(event) {
@@ -128,7 +143,7 @@ export default class DevToolsModel extends esp.model.DisposableBase {
             var modelId = event.modelIds[i];
             let registeredModel = this._registeredModels[modelId];
             if(registeredModel) {
-                var dataPoint = new DataPoint(moment(), event.err, modelId, DataPointType.routerHalted);
+                var dataPoint = new DataPoint(moment(), modelId, null, event.err, null, DataPointType.routerHalted);
                 registeredModel.haltingError = event.err;
                 registeredModel.isHalted = true;
                 this._addDataPoint(dataPoint);
@@ -136,31 +151,6 @@ export default class DevToolsModel extends esp.model.DisposableBase {
         }
         this._updateType.push(UpdateType.modelsChanged);
         this._updateType.push(UpdateType.eventsChanged);
-    }
-    _addModel(modelId) {
-        this._updateType.push(UpdateType.modelsChanged);
-        let registeredModel = this._registeredModels[modelId];
-        if(registeredModel) {
-            throw new Error(`model with id ${modelId} already registered`);
-        }
-        registeredModel = new RegisteredModel(modelId);
-        this._registeredModels[modelId] = registeredModel;
-        return registeredModel;
-    }
-    _addDataPoint(dataPoint) {
-        this._dataPointsById[dataPoint.pointId] = dataPoint;
-        this._dataPoints.push(dataPoint);
-        this._newDataPoints.push(dataPoint);
-        this._processedDataPointCount++;
-        if(this._processedDataPointCount > this._dataPointBufferSize) {
-            let numberToRemove = this._dataPoints.length - this._dataPointBufferSize;
-            let removedItems = this._dataPoints.splice(0, numberToRemove);
-            for (let i = 0; i < removedItems.length; i++) {
-                let dataPointToRemove = removedItems[i];
-                this._dataPointsIdsToRemove.push(dataPointToRemove.pointId);
-                delete this._dataPointsById[dataPointToRemove.pointId];
-            }
-        }
     }
     @esp.observeEvent('pointSelected')
     _onPointSelected(event) {
@@ -216,6 +206,43 @@ export default class DevToolsModel extends esp.model.DisposableBase {
     _stopTimer() {
         if(this._timerSubscription != null) {
             clearInterval(this._timerSubscription);
+        }
+    }
+    _recordEvent(modelId, eventType, dataPointType, eventPayload) {
+        this._updateType.push(UpdateType.eventsChanged);
+        let registeredModel = this._registeredModels[modelId];
+        if (!registeredModel) {
+            this._addModel(modelId);
+        }
+        var dataPoint = new DataPoint(moment(), modelId, eventType, null, eventPayload, dataPointType);
+        this._addDataPoint(dataPoint);
+        if(this._shouldLogToConsole && typeof eventPayload !== 'undefined') {
+            console.log(`[ESP-Event] ModelId:[${modelId}] EventType:[${eventType}]`, eventPayload);
+        }
+    }
+    _addModel(modelId) {
+        this._updateType.push(UpdateType.modelsChanged);
+        let registeredModel = this._registeredModels[modelId];
+        if(registeredModel) {
+            throw new Error(`model with id ${modelId} already registered`);
+        }
+        registeredModel = new RegisteredModel(modelId);
+        this._registeredModels[modelId] = registeredModel;
+        return registeredModel;
+    }
+    _addDataPoint(dataPoint) {
+        this._dataPointsById[dataPoint.pointId] = dataPoint;
+        this._dataPoints.push(dataPoint);
+        this._newDataPoints.push(dataPoint);
+        this._processedDataPointCount++;
+        if(this._processedDataPointCount > this._dataPointBufferSize) {
+            let numberToRemove = this._dataPoints.length - this._dataPointBufferSize;
+            let removedItems = this._dataPoints.splice(0, numberToRemove);
+            for (let i = 0; i < removedItems.length; i++) {
+                let dataPointToRemove = removedItems[i];
+                this._dataPointsIdsToRemove.push(dataPointToRemove.pointId);
+                delete this._dataPointsById[dataPointToRemove.pointId];
+            }
         }
     }
 }

@@ -25,10 +25,11 @@ import vis from 'vis';
 import 'vis/dist/vis.css';
 import './devToolsView.less'
 import UpdateType from '../model/updateType';
-import template from './devToolsView.template.html';
+import containerTempalte from './devToolsView.template.html';
+import pointSelectedTempalte from './pointSelected.template.html';
 import DataPointType from '../model/dataPointType';
 
-export default class DevToolsView extends esp.model.DisposableBase {
+export default class DevToolsView extends esp.DisposableBase {
 
     constructor(modelId, router) {
         super();
@@ -70,7 +71,7 @@ export default class DevToolsView extends esp.model.DisposableBase {
                         let points = isStateOfTheWorld
                             ? model.dataPoints
                             : model.newDataPoints;
-                        for (var i = 0; i < points.length; i++) {
+                        for (let i = 0; i < points.length; i++) {
                             var dataPoint = points[i];
                             let pointStyle = dataPoint.pointType == DataPointType.routerHalted
                                 ? 'background:red'
@@ -78,8 +79,8 @@ export default class DevToolsView extends esp.model.DisposableBase {
                             this._timelineData.add({
                                 id: dataPoint.pointId,
                                 group: dataPoint.modelId,
-                                title: dataPoint.data,
-                                start: dataPoint.publishedTime,
+                                title: dataPoint.eventType,
+                                start: dataPoint.timeRecordedAt,
                                 style: pointStyle
                             });
                         }
@@ -103,7 +104,16 @@ export default class DevToolsView extends esp.model.DisposableBase {
                             this._logEventsConsoleCheckbox.prop('checked', model.shouldLogToConsole);
                         }
                         if (this._eventDetailsDescriptionP && model.selectedDataPoint) {
-                            this._eventDetailsDescriptionP.html(JSON.stringify(model.selectedDataPoint));
+                            let pointSelectedContainer = $(pointSelectedTempalte);
+                            pointSelectedContainer.find('#timeRecordedAt').text(model.selectedDataPoint.timeRecordedAt);
+                            pointSelectedContainer.find('#modelId').text(model.selectedDataPoint.modelId);
+                            pointSelectedContainer.find('#eventType').text(model.selectedDataPoint.eventType);
+                            pointSelectedContainer.find('#error').text(model.selectedDataPoint.error || 'none');
+                            let eventString = model.selectedDataPoint.eventPayload
+                                ? JSON.stringify(model.selectedDataPoint.eventPayload)
+                                : 'N/A';
+                            pointSelectedContainer.find('#event').html(eventString);
+                            this._eventDetailsDescriptionP.html(pointSelectedContainer);
                         }
                         if(this._ringBufferSizeInput && !this._ringBufferSizeInput.is(":focus")) {
                             this._ringBufferSizeInput.val(model.dataPointBufferSize);
@@ -117,7 +127,7 @@ export default class DevToolsView extends esp.model.DisposableBase {
     _createDevToolsElements() {
         let _this = this;
         $(() => {
-            let container = $(template);
+            let container = $(containerTempalte);
 
             // note use of function so 'this' is the checkbox
             this._autoscrollCheckbox = container.find('#autoscrollCheckbox');
