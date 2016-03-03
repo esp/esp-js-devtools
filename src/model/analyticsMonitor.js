@@ -36,10 +36,10 @@ export default class AnalyticsMonitor {
         this._router.publishEvent(this._devToolsModelId,'eventPublished', {modelId: modelId, eventType: eventType, event:event});
     }
     broadcastEvent(eventType) {
-        this._router.publishEvent(this._devToolsModelId, 'broadcastEvent', {eventType: eventType});
+        // TODO this might cause some infinite loop issues, need to be careful when it's wired up
     }
     executingEvent(eventType) {
-        this._router.publishEvent(this._devToolsModelId, 'executingEvent', {eventType: eventType});
+       this._router.publishEvent(this._devToolsModelId, 'executingEvent', {eventType: eventType});
     }
     runAction(modelId) {
         if(modelId === DebugToolsModel.modelId) return;

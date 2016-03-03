@@ -24,7 +24,7 @@ import RegisteredModel from './registeredModel';
 import DataPoint from './dataPoint';
 import DataPointType from './dataPointType';
 
-export default class DevToolsModel extends esp.model.DisposableBase {
+export default class DevToolsModel extends esp.DisposableBase {
     constructor(router, options) {
         super();
         this._router = router;
@@ -39,9 +39,15 @@ export default class DevToolsModel extends esp.model.DisposableBase {
         this._timerSubscription = null;
         this._now = moment();
         this._shouldAutoScroll = true;
-        this._shouldCaptureEvents = true;
-        this._shouldLogToConsole = options.logEventsToConsole ? true : false;
-        this._dataPointBufferSize = 200;
+        this._shouldCaptureEvents = typeof options.shouldCaptureEvents === 'undefined'
+            ? true
+            : options.shouldCaptureEvents === true;
+        this._shouldLogToConsole = typeof options.logEventsToConsole === 'undefined'
+            ? false
+            : options.logEventsToConsole === true;
+        this._dataPointBufferSize = typeof options.dataPointBufferSize === 'undefined' || isNaN(options.dataPointBufferSize)
+            ? 500
+            : options.dataPointBufferSize;
     }
     static get modelId() {
         return 'esp-debugTools';
@@ -90,6 +96,8 @@ export default class DevToolsModel extends esp.model.DisposableBase {
     @esp.observeEvent('modelAdded', esp.ObservationStage.preview)
     @esp.observeEvent('modelRemoved', esp.ObservationStage.preview)
     @esp.observeEvent('eventPublished', esp.ObservationStage.preview)
+    @esp.observeEvent('runAction', esp.ObservationStage.preview)
+    @esp.observeEvent('executingEvent', esp.ObservationStage.preview)
     _previewEvents(event, context) {
         if(!this._shouldCaptureEvents || this.isDisposed) {
             context.cancel();
@@ -135,7 +143,7 @@ export default class DevToolsModel extends esp.model.DisposableBase {
             var modelId = event.modelIds[i];
             let registeredModel = this._registeredModels[modelId];
             if(registeredModel) {
-                var dataPoint = new DataPoint(moment(), modelId, null, event.err, DataPointType.routerHalted);
+                var dataPoint = new DataPoint(moment(), modelId, null, event.err, null, DataPointType.routerHalted);
                 registeredModel.haltingError = event.err;
                 registeredModel.isHalted = true;
                 this._addDataPoint(dataPoint);
@@ -200,13 +208,13 @@ export default class DevToolsModel extends esp.model.DisposableBase {
             clearInterval(this._timerSubscription);
         }
     }
-    _recordEvent(modelId, eventType, dataPointType:DataPointType, eventPayload) {
+    _recordEvent(modelId, eventType, dataPointType, eventPayload) {
         this._updateType.push(UpdateType.eventsChanged);
         let registeredModel = this._registeredModels[modelId];
         if (!registeredModel) {
             this._addModel(modelId);
         }
-        var dataPoint = new DataPoint(moment(), modelId, eventType, null, dataPointType);
+        var dataPoint = new DataPoint(moment(), modelId, eventType, null, eventPayload, dataPointType);
         this._addDataPoint(dataPoint);
         if(this._shouldLogToConsole && typeof eventPayload !== 'undefined') {
             console.log(`[ESP-Event] ModelId:[${modelId}] EventType:[${eventType}]`, eventPayload);
