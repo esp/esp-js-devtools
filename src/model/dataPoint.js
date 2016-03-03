@@ -20,24 +20,28 @@ import DataPointType from './dataPointType';
 let dataPointId = 1;
 
 export default class DataPoint {
-    constructor(publishedTime, data, modelId, pointType) {
+    constructor(timeRecordedAt, modelId, eventType, error, pointType) {
         this._pointId = dataPointId++;
-        this._data = data;
-        this._publishedTime = publishedTime;
-        this._devToolsModelId = modelId;
+        this._timeRecordedAt = timeRecordedAt;
+        this._modelId = modelId;
+        this._eventType = eventType;
+        this._error = error;
         this._pointType = pointType;
     }
     get pointId() {
         return this._pointId;
     }
-    get data() {
-        return this._data;
-    }
-    get publishedTime() {
-        return this._publishedTime;
+    get timeRecordedAt() {
+        return this._timeRecordedAt;
     }
     get modelId() {
-        return this._devToolsModelId;
+        return this._modelId;
+    }
+    get eventType() {
+        return this._eventType;
+    }
+    get error() {
+        return this._error;
     }
     get pointType() {
         return this._pointType;

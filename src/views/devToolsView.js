@@ -25,7 +25,8 @@ import vis from 'vis';
 import 'vis/dist/vis.css';
 import './devToolsView.less'
 import UpdateType from '../model/updateType';
-import template from './devToolsView.template.html';
+import containerTempalte from './devToolsView.template.html';
+import pointSelectedTempalte from './pointSelected.template.html';
 import DataPointType from '../model/dataPointType';
 
 export default class DevToolsView extends esp.model.DisposableBase {
@@ -70,7 +71,7 @@ export default class DevToolsView extends esp.model.DisposableBase {
                         let points = isStateOfTheWorld
                             ? model.dataPoints
                             : model.newDataPoints;
-                        for (var i = 0; i < points.length; i++) {
+                        for (let i = 0; i < points.length; i++) {
                             var dataPoint = points[i];
                             let pointStyle = dataPoint.pointType == DataPointType.routerHalted
                                 ? 'background:red'
@@ -103,6 +104,7 @@ export default class DevToolsView extends esp.model.DisposableBase {
                             this._logEventsConsoleCheckbox.prop('checked', model.shouldLogToConsole);
                         }
                         if (this._eventDetailsDescriptionP && model.selectedDataPoint) {
+
                             this._eventDetailsDescriptionP.html(JSON.stringify(model.selectedDataPoint));
                         }
                         if(this._ringBufferSizeInput && !this._ringBufferSizeInput.is(":focus")) {
@@ -117,7 +119,7 @@ export default class DevToolsView extends esp.model.DisposableBase {
     _createDevToolsElements() {
         let _this = this;
         $(() => {
-            let container = $(template);
+            let container = $(containerTempalte);
 
             // note use of function so 'this' is the checkbox
             this._autoscrollCheckbox = container.find('#autoscrollCheckbox');

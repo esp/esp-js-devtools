@@ -36,14 +36,20 @@ export default class AnalyticsMonitor {
         this._router.publishEvent(this._devToolsModelId,'eventPublished', {modelId: modelId, eventType: eventType, event:event});
     }
     broadcastEvent(eventType) {
+        this._router.publishEvent(this._devToolsModelId, 'broadcastEvent', {eventType: eventType});
     }
-    executingEvent(modelId) {
+    executingEvent(eventType) {
+        this._router.publishEvent(this._devToolsModelId, 'executingEvent', {eventType: eventType});
     }
     runAction(modelId) {
+        if(modelId === DebugToolsModel.modelId) return;
+        this._router.publishEvent(this._devToolsModelId, 'runAction', {modelId: modelId});
     }
     eventEnqueued(modelId, eventType) {
     }
     eventIgnored(modelId, eventType) {
+        if(modelId === DebugToolsModel.modelId) return;
+        this._router.publishEvent(this._devToolsModelId,'eventIgnored', {modelId: modelId, eventType: eventType});
     }
     dispatchLoopStart() {
     }
@@ -72,7 +78,7 @@ export default class AnalyticsMonitor {
     dispatchLoopEnd() {
     }
     halted(modelIds, err) {
-        if(modelIds.indexOf(DebugToolsModel.modelId) >=0 ) return;
+        if(modelIds.indexOf(DebugToolsModel.modelId) >= 0) return;
         this._router.publishEvent(this._devToolsModelId, 'routerHalted', {modelIds: modelIds, err: err});
     }
     registerMonitor(devToolsDiagnosticMonitor) {

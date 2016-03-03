@@ -1,6 +1,6 @@
 {
   "name": "esp-js-devtools",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "Evented State Processor (ESP) dev tools",
   "main": "dist/esp-js-devtools.js",
   "scripts": {
