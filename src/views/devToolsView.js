@@ -17,9 +17,7 @@
 // notice_end
 
 import $ from 'jquery';
-import "jquery-ui/draggable";
 import esp from 'esp-js';
-import _ from 'lodash';
 import moment from 'moment';
 import vis from 'vis';
 import 'vis/dist/vis.css';
@@ -28,7 +26,7 @@ import UpdateType from '../model/updateType';
 import template from './devToolsView.template.html';
 import DataPointType from '../model/dataPointType';
 
-export default class DevToolsView extends esp.model.DisposableBase {
+export default class DevToolsView extends esp.DisposableBase {
 
     constructor(modelId, router) {
         super();

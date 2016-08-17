@@ -24,7 +24,7 @@ import RegisteredModel from './registeredModel';
 import DataPoint from './dataPoint';
 import DataPointType from './dataPointType';
 
-export default class DevToolsModel extends esp.model.DisposableBase {
+export default class DevToolsModel extends esp.DisposableBase {
     constructor(router, options) {
         super();
         this._router = router;
