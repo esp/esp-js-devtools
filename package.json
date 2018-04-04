@@ -13,32 +13,32 @@
   "repository": "https://github.com/esp/esp-js",
   "dependencies": {
     "babel-plugin-transform-runtime": "^6.4.3",
-    "esp-js": "^0.7.0",
-    "install": "^0.4.2",
-    "jquery": "^2.2.1",
+    "esp-js": "^1.5.2",
+    "install": "^0.11.0",
+    "jquery": "^3.3.1",
     "jquery-ui": "^1.10.5",
     "lodash": "^4.2.1",
     "moment": "^2.11.2",
-    "npm": "^3.6.0",
+    "npm": "^5.8.0",
     "vis": "^4.13.0",
-    "webpack-dev-server": "^1.14.1"
+    "webpack-dev-server": "^3.1.1"
   },
   "devDependencies": {
     "babel-core": "^6.4.5",
-    "babel-loader": "^6.2.1",
-    "esp-js": "0.5.15",
+    "babel-loader": "^7.1.4",
+    "esp-js": "1.5.2",
     "babel-plugin-transform-decorators-legacy": "^1.3.4",
     "babel-preset-es2015": "^6.3.13",
     "babel-preset-react": "^6.3.13",
     "babel-preset-stage-0": "^6.3.13",
-    "css-loader": "^0.23.1",
-    "file-loader": "^0.8.5",
-    "html-loader": "^0.4.0",
-    "imports-loader": "^0.6.5",
-    "less": "^2.6.0",
-    "less-loader": "^2.2.2",
-    "script-loader": "^0.6.1",
-    "style-loader": "^0.13.0",
-    "webpack": "^1.12.12"
+    "css-loader": "^0.28.11",
+    "file-loader": "^1.1.11",
+    "html-loader": "^0.5.5",
+    "imports-loader": "^0.8.0",
+    "less": "^3.0.1",
+    "less-loader": "^4.1.0",
+    "script-loader": "^0.7.2",
+    "style-loader": "^0.20.3",
+    "webpack": "^4.4.1"
   }
 }
