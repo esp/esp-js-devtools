@@ -3,6 +3,8 @@
 
 # Evented State Processor (ESP) Dev Tools
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/esp/esp-js-devtools.svg)](https://greenkeeper.io/)
+
 The esp-js devtools give you the ability to monitor activity of all models in all routers.
 
 Features:
